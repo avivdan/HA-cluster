@@ -1,0 +1,74 @@
+services:
+  webz-001:
+    image: ubuntu:18.04
+    hostname: webz-001
+    container_name: webz-001
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    stdin_open: true
+    tty: true
+    ports:
+      - "2201:22"
+    networks: 
+      webz-net:
+        ipv4_address: 172.20.0.102
+    command: /bin/bash -c "shared/cluster_install.sh && sleep infinity"
+    volumes:
+      - ./shared:/shared
+  webz-002:
+    image: ubuntu:18.04
+    hostname: webz-002
+    container_name: webz-002
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    tty: true
+    stdin_open: true
+    ports:
+      - "2202:22"
+    networks: 
+      webz-net:
+        ipv4_address: 172.20.0.103
+    command: /bin/bash -c "shared/cluster_install.sh && sleep infinity"
+    volumes:
+      - ./shared:/shared
+  webz-003:
+    image: ubuntu:18.04
+    hostname: webz-003
+    container_name: webz-003
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    tty: true
+    stdin_open: true
+    ports:
+      - "2203:22"
+    networks: 
+      webz-net:
+        ipv4_address: 172.20.0.104
+    command: /bin/bash -c "shared/cluster_install.sh && sleep infinity"
+    volumes:
+      - ./shared:/shared
+  jenkins: # This service is now configured to run Jenkins from the official image
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins
+    restart: on-failure
+    ports:
+      - "8081:8080" # Jenkins UI
+      - "50001:50000" # Jenkins agent communication
+    networks:
+      webz-net:
+        ipv4_address: 172.20.0.105
+    volumes:
+      - jenkins_home:/var/jenkins_home
+
+networks:
+  webz-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  jenkins_home:
