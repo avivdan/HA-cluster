@@ -69,11 +69,6 @@ else
   echo "This is not webz-001. Skipping cluster configuration."
 fi
 
-
-# echo "* * * * * VIP_NODE=\$(crm status | grep \"vip.*Started\" | awk '{print \$NF}') && echo \"Junior DevOps Engineer - Home Task on \$VIP_NODE\" > /var/www/html/index.html"
-# (crontab -l 2>/dev/null; echo 'l') | crontab -
-# (crontab -l 2>/dev/null; echo '* * * * * VIP_NODE=$(crm status | grep "vip.*Started" | awk '\''{print $NF}'\''); echo "Junior DevOps Engineer - Home Task on $VIP_NODE" > /var/www/html/index.html') | crontab -
-
 cat << 'EOF' > /usr/local/bin/update_vip_node.sh
 #!/bin/bash
 VIP_NODE=$(/usr/sbin/crm status | grep "vip.*Started" | awk '{print $NF}')

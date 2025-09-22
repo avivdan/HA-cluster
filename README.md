@@ -63,6 +63,12 @@ Jenkins data is stored on the host under `./jenkins_home` (bind mount). Remove t
 
 The Jenkins container uses the official LTS image with JDK 17. The sample `jenkins_script.groovy` shows how to curl the VIP and append a timestamped line into `/var/jenkins_home/crl.log`. Create a Freestyle job (or a Pipeline) with an Execute Shell step using that example to observe which node serves the VIP during failover.
 
+### Jenkins cron job
+
+- Suggested schedule: `H/5 * * * *` (every ~5 minutes, hashed per job) as shown in `jenkins_script.groovy`.
+- Output log file: `/var/jenkins_home/crl.log` (available on the host at `./jenkins_home/crl.log`).
+- The job appends (does not overwrite) new lines with timestamp and the VIP response so you can track over time.
+
 ## Troubleshooting
 
 - If `crm status` does not show all three nodes online, wait a bit longer or check services:
