@@ -50,18 +50,24 @@ services:
     command: /bin/bash -c "shared/cluster_install.sh && sleep infinity"
     volumes:
       - ./shared:/shared
-  jenkins: # This service is now configured to run Jenkins from the official image
+  jenkins: 
     image: jenkins/jenkins:lts-jdk17
     container_name: jenkins
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    tty: true
+    stdin_open: true
     restart: on-failure
     ports:
       - "8081:8080" # Jenkins UI
       - "50001:50000" # Jenkins agent communication
     networks:
-      webz-net:
+      webz-net: 
         ipv4_address: 172.20.0.105
     volumes:
-      - jenkins_home:/var/jenkins_home
+      - ./jenkins_home:/var/jenkins_home
+      - ./shared:/shared
 
 networks:
   webz-net:
@@ -69,6 +75,4 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/16
-
-volumes:
-  jenkins_home:
+  

@@ -5,12 +5,13 @@ ln -fs /usr/share/zoneinfo/UTC /etc/localtime
 echo "UTC" > /etc/timezone
 
 apt-get update
-apt-get install -y sudo apache2 apache2-utils curl wget net-tools tzdata nano fontconfig gnupg1 gnupg2 gnupg pacemaker corosync pcs resource-agents iputils-ping iproute2 netcat systemd openssh-client openssh-server crmsh
+apt-get install -y sudo apache2 apache2-utils curl wget net-tools tzdata nano fontconfig gnupg1 gnupg2 gnupg pacemaker corosync pcs resource-agents iputils-ping iproute2 netcat systemd openssh-client openssh-server crmsh cron
 
 debconf-set-selections <<< 'tzdata tzdata/Areas select Etc'
 debconf-set-selections <<< 'tzdata tzdata/Zones/Etc select UTC'
 apt-get install -y --reinstall tzdata
 
+service cron start
 
 service apache2 stop
 update-rc.d apache2 disable
@@ -26,7 +27,9 @@ cat /shared/totem.conf  > /etc/corosync/corosync.conf
 
 echo "Creating Apache homepage..."
 mkdir -p /var/www/html
-echo "Junior DevOps Engineer - Home Task" > /var/www/html/index.html
+
+# VIP_NODE=$(crm status | grep "vip.*Started" | awk '{print $NF}')
+# echo "Junior DevOps Engineer - Home Task on $VIP_NODE" > /var/www/html/index.html
 
 echo "Configuring Apache..."
 sed -i 's/Listen 80/Listen 0.0.0.0:80/' /etc/apache2/ports.conf
@@ -34,15 +37,16 @@ sed -i 's/Listen 80/Listen 0.0.0.0:80/' /etc/apache2/ports.conf
 service corosync start
 service pacemaker start
 
+
 # --- Cluster Configuration ---
 if [ "$(hostname)" == "webz-001" ]; then
   echo "This is webz-001. Waiting for cluster to stabilize before configuration..."
   for i in {1..12}; do
     if crm status | grep -q "Online: \[ webz-001 webz-002 webz-003 \]"; then
-      echo "Both nodes are online."
+      echo "All nodes are online."
       break
     fi
-    echo "Waiting for webz-002 to come online... (attempt $i/12)"
+    echo "Waiting for all nodes to come online... (attempt $i/12)"
     sleep 10
   done
 
@@ -64,5 +68,22 @@ if [ "$(hostname)" == "webz-001" ]; then
 else
   echo "This is not webz-001. Skipping cluster configuration."
 fi
+
+
+# echo "* * * * * VIP_NODE=\$(crm status | grep \"vip.*Started\" | awk '{print \$NF}') && echo \"Junior DevOps Engineer - Home Task on \$VIP_NODE\" > /var/www/html/index.html"
+# (crontab -l 2>/dev/null; echo 'l') | crontab -
+# (crontab -l 2>/dev/null; echo '* * * * * VIP_NODE=$(crm status | grep "vip.*Started" | awk '\''{print $NF}'\''); echo "Junior DevOps Engineer - Home Task on $VIP_NODE" > /var/www/html/index.html') | crontab -
+
+cat << 'EOF' > /usr/local/bin/update_vip_node.sh
+#!/bin/bash
+VIP_NODE=$(/usr/sbin/crm status | grep "vip.*Started" | awk '{print $NF}')
+echo "Junior DevOps Engineer - Home Task on $VIP_NODE" > /var/www/html/index.html
+EOF
+
+chmod +x /usr/local/bin/update_vip_node.sh
+
+(crontab -l 2>/dev/null; echo '* * * * * /usr/local/bin/update_vip_node.sh') | crontab -
+# echo "Junior DevOps Engineer - Home Task on $(crm status | grep "vip.*Started" | awk '{print $NF}')" > /var/www/html/index.html'
+
 
 echo "=== Cluster node setup completed on $(hostname) ==="
