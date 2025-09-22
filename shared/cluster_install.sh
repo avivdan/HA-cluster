@@ -78,7 +78,5 @@ EOF
 chmod +x /usr/local/bin/update_vip_node.sh
 
 (crontab -l 2>/dev/null; echo '* * * * * /usr/local/bin/update_vip_node.sh') | crontab -
-# echo "Junior DevOps Engineer - Home Task on $(crm status | grep "vip.*Started" | awk '{print $NF}')" > /var/www/html/index.html'
-
 
 echo "=== Cluster node setup completed on $(hostname) ==="
