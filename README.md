@@ -1,6 +1,6 @@
-# Test Environment: HA Web Cluster + Jenkins
+# Project Overview: HA Web Cluster + Jenkins Monitoring
 
-This folder contains a self-contained docker-compose environment that boots a 3-node HA web cluster managed by Pacemaker/Corosync, plus a Jenkins controller for simple monitoring/demo jobs.
+This project is a Docker-based lab that demonstrates a highly-available web service using Pacemaker/Corosync across three Ubuntu nodes, plus a Jenkins controller for simple health checks and observability. It’s useful for learning cluster concepts, testing failover, and showcasing resource management.
 
 ## Contents
 
@@ -18,7 +18,7 @@ This folder contains a self-contained docker-compose environment that boots a 3-
   - VIP primitive: `172.20.0.100/16` on `eth0`
   - Apache primitive: `ocf:heartbeat:apache`
   - Group `vip_group`: `vip + webserver`
-  - Cluster properties: `stonith-enabled=false`, `no-quorum-policy=ignore`
+  - Cluster properties: `stonith-enabled=false`
 
 Note: The VIP (`172.20.0.100`) exists inside the compose network and is not published to the host. Access it from within the containers or via the Jenkins container.
 
@@ -57,15 +57,11 @@ To stop and clean up:
 docker compose down
 ```
 
-Jenkins data is stored in the named volume `jenkins_home`. To remove it as well:
-
-```bash
-docker compose down -v
-```
+Jenkins data is stored on the host under `./jenkins_home` (bind mount). Remove this directory manually if you want a fresh Jenkins home.
 
 ## Jenkins note
 
-The Jenkins container uses the official LTS image with JDK 17. The sample `jenkins_script.groovy` contains a simple step that curls the VIP and appends a timestamped line into `/var/jenkins_home/crl.log`. You can create a Freestyle job and add an Execute Shell build step based on that content.
+The Jenkins container uses the official LTS image with JDK 17. The sample `jenkins_script.groovy` shows how to curl the VIP and append a timestamped line into `/var/jenkins_home/crl.log`. Create a Freestyle job (or a Pipeline) with an Execute Shell step using that example to observe which node serves the VIP during failover.
 
 ## Troubleshooting
 
